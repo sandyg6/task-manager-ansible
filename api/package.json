@@ -1,0 +1,15 @@
+{
+  "name": "task-manager-ansible",
+  "version": "1.0.0",
+  "description": "A simple task management GraphQL API",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.17.1",
+    "graphql": "^15.6.0",
+    "express-graphql": "^0.11.0",
+    "mongoose": "^5.10.9"
+  }
+}
