@@ -1,0 +1,79 @@
+- name: Deploy Task Manager Application
+  hosts: all
+  become: true
+  gather_facts: false  # Avoid gathering facts if not needed (saves time)
+  vars:
+    node_version: "16.x"
+
+  tasks:
+
+    # Install curl for Node.js setup
+    - name: Install curl
+      apt:
+        name: curl
+        state: present
+
+    # Add Node.js repository and install Node.js
+    - name: Add Node.js repository
+      shell: curl -fsSL https://deb.nodesource.com/setup_{{ node_version }} | bash -
+      args:
+        creates: /usr/bin/node
+
+    - name: Install Node.js
+      apt:
+        name: nodejs
+        state: present
+
+    # Ensure npm (Node Package Manager) is installed
+    - name: Ensure npm is installed
+      apt:
+        name: npm
+        state: present
+
+    # Install pm2 globally
+    - name: Install pm2 globally
+      npm:
+        name: pm2
+        global: yes
+      register: pm2_install
+      failed_when: pm2_install.failed  # Ensure the task fails if pm2 installation fails
+
+    # Check if pm2 is installed
+    - name: Ensure pm2 is installed
+      command: pm2 --version
+      register: pm2_version_check
+      failed_when: pm2_version_check.failed
+      changed_when: false
+
+    # Copy application files to the target machine
+    - name: Copy application files
+      copy:
+        src: "../api/"  # Path to your local app directory
+        dest: "/home/sandy/Desktop/task-manager-ansible/"
+        mode: '0755'
+
+    # Install application dependencies using npm
+    - name: Install application dependencies
+      npm:
+        path: /home/sandy/Desktop/task-manager-ansible
+        state: present
+
+    # Start the application using pm2
+    - name: Start the application with pm2
+      command: pm2 start /home/sandy/Desktop/task-manager-ansible/server.js --name task-manager-ansible
+      args:
+        chdir: /home/sandy/Desktop/task-manager-ansible
+
+    # Ensure pm2 process is saved for restarts
+    - name: Save pm2 process list
+      command: pm2 save
+      args:
+        chdir: /home/sandy/Desktop/task-manager-ansible
+
+    # Ensure the task manager app is running
+    - name: Ensure the task manager app is running with pm2
+      command: pm2 list
+      register: pm2_process_list
+      changed_when: false
+      failed_when: "'task-manager-ansible' not in pm2_process_list.stdout"
+
