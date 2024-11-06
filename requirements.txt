@@ -1,0 +1,5 @@
+ansible-playbook -i ansible/inventory.ini ansible/deploy.yml --ask-become-pass
+sudo netstat -tulpn
+
+ping -c 4 google.com
+ping registry.npmjs.org
